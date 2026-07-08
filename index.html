@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFD Catalog - Stellar Flares</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Exact color palette extracted from the provided image */
+        :root {
+            --color-black: #000000;
+            --color-white: #FFFFFF;
+            --color-cream: #FDE4D3;
+            --color-green: #81C784;
+            --color-blue: #7FB3EB;
+            --color-yellow: #FFD54F;
+            --color-pink: #F06292;
+            --color-orange: #FF9800;
+            --color-red: #E55343;
+        }
+
+        body {
+            background-color: var(--color-cream);
+            color: var(--color-black);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .header-bg { background-color: var(--color-black); color: var(--color-white); }
+        .btn-primary { background-color: var(--color-blue); color: var(--color-white); }
+        .btn-primary:hover { filter: brightness(0.9); }
+        .btn-success { background-color: var(--color-green); color: var(--color-white); }
+        .btn-success:hover { filter: brightness(0.9); }
+        .btn-warning { background-color: var(--color-yellow); color: var(--color-black); }
+        .btn-danger { background-color: var(--color-red); color: var(--color-white); }
+        
+        .card { background-color: var(--color-white); border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        th { background-color: var(--color-orange); color: white; }
+        tr:nth-child(even) { background-color: rgba(253, 228, 211, 0.3); }
+        
+        .badge-pink { background-color: var(--color-pink); color: white; }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+    <header class="header-bg p-5 shadow-md mb-8">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold tracking-wide flex items-center gap-2">
+                <span class="w-4 h-4 rounded-full" style="background-color: var(--color-yellow);"></span>
+                FFD Catalog
+            </h1>
+            <p class="text-sm opacity-75">Stellar Flare Frequency Distribution</p>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="space-y-6 lg:col-span-1">
+            
+            <div class="card p-6">
+                <h2 class="text-lg font-bold mb-4 border-b pb-2 flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full" style="background-color: var(--color-pink);"></span>
+                    Add New Flare Data
+                </h2>
+                <form id="flareForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase mb-1">Star ID / Name</label>
+                        <input type="text" id="starId" required class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="e.g., Proxima Centauri">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase mb-1">Peak Time (JD / Date)</label>
+                        <input type="text" id="peakTime" required class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="e.g., 2459000.5">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase mb-1">Equivalent Duration (s)</label>
+                        <input type="number" step="any" id="eqDuration" required class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="e.g., 120.5">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase mb-1">Energy (ergs)</label>
+                        <input type="text" id="energy" required class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="e.g., 3.2e34">
+                    </div>
+                    <button type="submit" class="w-full btn-success py-2 font-bold rounded transition shadow">Add to Catalog</button>
+                </form>
+            </div>
+
+            <div class="card p-6">
+                <h2 class="text-lg font-bold mb-3 border-b pb-2 flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full" style="background-color: var(--color-blue);"></span>
+                    GitHub Sync
+                </h2>
+                <p class="text-xs text-gray-600 mb-4">Fetch latest automated catalog entries directly from your repository pipeline configuration.</p>
+                <div class="space-y-2">
+                    <button onclick="syncFromGitHub()" class="w-full btn-primary py-2 font-bold rounded transition shadow flex justify-center items-center gap-2">
+                        Sync Data File
+                    </button>
+                    <button onclick="resetData()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-1 text-sm rounded transition">
+                        Reset to Defaults
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 space-y-4">
+            <div class="card p-6 overflow-hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <h2 class="text-xl font-bold">Stellar Flare Records</h2>
+                    <input type="text" id="searchInput" oninput="filterTable()" placeholder="Search Star ID..." class="p-2 border rounded w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                </div>
+
+                <div class="overflow-x-auto rounded border">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr>
+                                <th class="p-3 text-sm font-semibold">Star ID</th>
+                                <th class="p-3 text-sm font-semibold">Peak Time</th>
+                                <th class="p-3 text-sm font-semibold">Eq. Duration (s)</th>
+                                <th class="p-3 text-sm font-semibold">Energy (ergs)</th>
+                                <th class="p-3 text-sm font-semibold text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="catalogBody" class="divide-y text-sm">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Sample baseline data
+        const defaultData = [
+            { starId: "GJ 1243", peakTime: "2456789.12", eqDuration: 450.2, energy: "1.2e32" },
+            { starId: "AD Leo", peakTime: "2456801.45", eqDuration: 1200.0, energy: "5.6e33" },
+            { starId: "Proxima Centauri", peakTime: "2457120.89", eqDuration: 85.3, energy: "8.9e30" }
+        ];
+
+        // Load data from localStorage or use defaults
+        let catalogData = JSON.parse(localStorage.getItem('ffd_data')) || [...defaultData];
+
+        function renderTable() {
+            const tbody = document.getElementById('catalogBody');
+            tbody.innerHTML = '';
+
+            catalogData.forEach((flare, index) => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-orange-50 transition";
+                row.innerHTML = `
+                    <td class="p-3 font-medium">${escapeHtml(flare.starId)}</td>
+                    <td class="p-3 text-gray-600">${escapeHtml(flare.peakTime)}</td>
+                    <td class="p-3">${flare.eqDuration}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded text-xs badge-pink">${flare.energy}</span></td>
+                    <td class="p-3 text-center">
+                        <button onclick="deleteRow(${index})" class="text-red-500 hover:text-red-700 font-bold px-2">✕</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Add Data Form Handler
+        document.getElementById('flareForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newFlare = {
+                starId: document.getElementById('starId').value,
+                peakTime: document.getElementById('peakTime').value,
+                eqDuration: parseFloat(document.getElementById('eqDuration').value),
+                energy: document.getElementById('energy').value
+            };
+
+            catalogData.push(newFlare);
+            saveData();
+            renderTable();
+            this.reset();
+        });
+
+        // Delete Row
+        function deleteRow(index) {
+            catalogData.splice(index, 1);
+            saveData();
+            renderTable();
+        }
+
+        // Local Storage Utilities
+        function saveData() {
+            localStorage.setItem('ffd_data', JSON.stringify(catalogData));
+        }
+
+        function resetData() {
+            if(confirm("Reset catalog back to initial sample values?")) {
+                catalogData = [...defaultData];
+                saveData();
+                renderTable();
+            }
+        }
+
+        // Live table filtering
+        function filterTable() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#catalogBody tr');
+            
+            rows.forEach((row, index) => {
+                const starName = catalogData[index].starId.toLowerCase();
+                if(starName.includes(query)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
+        // GitHub Integration Sync Framework
+        function syncFromGitHub() {
+            alert("To directly fetch/push updates from your live GitHub repository pipeline, configure an active API endpoint or use a workflows workflow action to auto-generate a static JSON array data file in your repo branch!");
+            // Dynamic execution placeholder:
+            // fetch('https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/data.json')
+            // .then(res => res.json()).then(data => { catalogData = data; renderTable(); });
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        // Initial setup run
+        renderTable();
+    </script>
+</body>
+</html>
