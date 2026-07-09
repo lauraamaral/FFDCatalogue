@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FFD Catalog - Stellar Flares</title>
+    <title>The FFD Catalog - Stellar Flares</title>
+    <link class="brand-icon" rel="icon" type="image/png" href="logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.4.0/alasql.min.js"></script>
+    
     <style>
-        /* Exact color palette extracted from the provided image */
+        /* Exact color palette extracted from the brand identity image */
         :root {
             --color-black: #000000;
             --color-white: #FFFFFF;
@@ -22,205 +26,441 @@
         body {
             background-color: var(--color-cream);
             color: var(--color-black);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         .header-bg { background-color: var(--color-black); color: var(--color-white); }
         .btn-primary { background-color: var(--color-blue); color: var(--color-white); }
-        .btn-primary:hover { filter: brightness(0.9); }
+        .btn-primary:hover { filter: brightness(0.95); }
         .btn-success { background-color: var(--color-green); color: var(--color-white); }
-        .btn-success:hover { filter: brightness(0.9); }
         .btn-warning { background-color: var(--color-yellow); color: var(--color-black); }
         .btn-danger { background-color: var(--color-red); color: var(--color-white); }
         
-        .card { background-color: var(--color-white); border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        th { background-color: var(--color-orange); color: white; }
-        tr:nth-child(even) { background-color: rgba(253, 228, 211, 0.3); }
+        .card { background-color: var(--color-white); border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); border: 2px solid var(--color-black); }
+        th { background-color: var(--color-orange); color: white; border-bottom: 2px solid var(--color-black); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 6px; }
+        tr:nth-child(even) { background-color: rgba(253, 228, 211, 0.25); }
         
-        .badge-pink { background-color: var(--color-pink); color: white; }
+        .badge-pink { background-color: var(--color-pink); color: white; border: 1px solid var(--color-black); font-weight: bold; }
+        
+        /* Tab Interaction Styles */
+        .tab-btn { border: 2px solid var(--color-black); border-bottom: none; border-radius: 8px 8px 0 0; font-weight: bold; font-size: 12px; transition: all 0.2s ease; }
+        .tab-active { background-color: var(--color-white); color: var(--color-black); transform: translateY(2px); z-index: 10; }
+        .tab-inactive { background-color: rgba(0,0,0,0.05); color: rgba(0,0,0,0.5); }
+        .tab-inactive:hover { background-color: rgba(0,0,0,0.1); }
     </style>
 </head>
 <body class="min-h-screen pb-12">
 
-    <header class="header-bg p-5 shadow-md mb-8">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold tracking-wide flex items-center gap-2">
-                <span class="w-4 h-4 rounded-full" style="background-color: var(--color-yellow);"></span>
-                FFD Catalog
-            </h1>
-            <p class="text-sm opacity-75">Stellar Flare Frequency Distribution</p>
+    <header class="header-bg p-4 shadow-md mb-6 border-b-4" style="border-color: var(--color-pink);">
+        <div class="max-w-[95%] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <a href="#" class="flex items-center transition transform hover:scale-102">
+                <img src="logo.png" alt="The FFD Catalog Logo" class="h-16 w-auto object-contain" onerror="this.style.display='none'; document.getElementById('alt-logo').style.display='block';">
+                <h1 id="alt-logo" class="text-2xl font-bold tracking-wide hidden" style="color: var(--color-yellow);">FFD Catalog</h1>
+            </a>
+            <div class="text-center sm:text-right">
+                <p class="text-sm font-semibold tracking-wider uppercase" style="color: var(--color-yellow);">Stellar Flare Cataloging Portal</p>
+                <p class="text-xs opacity-70">Client SQL Workspace Engine • 19 Parameters</p>
+            </div>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <main class="max-w-[95%] mx-auto px-2 grid grid-cols-1 lg:grid-cols-4 gap-6">
         
-        <div class="space-y-6 lg:col-span-1">
-            
-            <div class="card p-6">
-                <h2 class="text-lg font-bold mb-4 border-b pb-2 flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full" style="background-color: var(--color-pink);"></span>
-                    Add New Flare Data
-                </h2>
-                <form id="flareForm" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold uppercase mb-1">Star ID / Name</label>
-                        <input type="text" id="starId" required class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="e.g., Proxima Centauri">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase mb-1">Peak Time (JD / Date)</label>
-                        <input type="text" id="peakTime" required class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="e.g., 2459000.5">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase mb-1">Equivalent Duration (s)</label>
-                        <input type="number" step="any" id="eqDuration" required class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="e.g., 120.5">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase mb-1">Energy (ergs)</label>
-                        <input type="text" id="energy" required class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="e.g., 3.2e34">
-                    </div>
-                    <button type="submit" class="w-full btn-success py-2 font-bold rounded transition shadow">Add to Catalog</button>
-                </form>
-            </div>
-
-            <div class="card p-6">
-                <h2 class="text-lg font-bold mb-3 border-b pb-2 flex items-center gap-2">
+        <div class="lg:col-span-1 space-y-6">
+            <div class="card p-5">
+                <h2 class="text-md font-bold mb-3 flex items-center gap-2 border-b pb-2">
                     <span class="w-3 h-3 rounded-full" style="background-color: var(--color-blue);"></span>
-                    GitHub Sync
+                    Import GitHub CSV
                 </h2>
-                <p class="text-xs text-gray-600 mb-4">Fetch latest automated catalog entries directly from your repository pipeline configuration.</p>
-                <div class="space-y-2">
-                    <button onclick="syncFromGitHub()" class="w-full btn-primary py-2 font-bold rounded transition shadow flex justify-center items-center gap-2">
-                        Sync Data File
-                    </button>
-                    <button onclick="resetData()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-1 text-sm rounded transition">
-                        Reset to Defaults
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-bold mb-1 opacity-75">Raw GitHub CSV URL:</label>
+                        <input type="url" id="csvUrlInput" class="w-full p-2 border-2 border-black rounded text-xs" 
+                               value="https://raw.githubusercontent.com/jradavenport/FFD/master/example_data.csv" placeholder="https://raw.githubusercontent.com/.../data.csv">
+                    </div>
+                    <button onclick="fetchFromGitHubCSV()" class="w-full btn-primary py-2 font-bold rounded-lg transition border-2 border-black shadow">
+                        Fetch & Parse CSV
                     </button>
                 </div>
+            </div>
+
+            <div class="card p-5 border-2" style="border-color: var(--color-orange);">
+                <h2 class="text-md font-bold mb-3 flex items-center gap-2 border-b pb-2">
+                    <span class="w-3 h-3 rounded-full" style="background-color: var(--color-orange);"></span>
+                    SQL Query Studio
+                </h2>
+                <div class="space-y-3 text-xs">
+                    <p class="text-[11px] text-gray-600 leading-relaxed">
+                        Query the dataset active memory context using standard SQL. The dynamic matrix target keyword is <code class="bg-gray-100 px-1 font-mono font-bold">?</code>.
+                    </p>
+                    <div>
+                        <textarea id="sqlTerminalInput" rows="4" class="w-full p-2 font-mono text-[11px] border-2 border-black rounded bg-gray-50 focus:bg-white focus:outline-none">SELECT * FROM ? WHERE duration > 100</textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="executeSQLQuery()" class="btn-warning py-2 font-bold rounded-lg transition border-2 border-black shadow text-center">
+                            Run Query
+                        </button>
+                        <button onclick="resetSQLView()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 font-semibold rounded-lg transition border border-gray-400">
+                            Clear Filter
+                        </button>
+                    </div>
+                    <button onclick="downloadSQLSelectionCSV()" class="w-full btn-success py-2 font-bold rounded-lg transition border-2 border-black shadow flex justify-center items-center gap-1.5">
+                        📥 Download Selected CSV
+                    </button>
+                </div>
+            </div>
+
+            <div class="card p-5">
+                <h2 class="text-md font-bold mb-3 flex items-center gap-2 border-b pb-2">
+                    <span class="w-3 h-3 rounded-full" style="background-color: var(--color-green);"></span>
+                    Add Record Manually
+                </h2>
+                <form id="metricsForm" class="space-y-2 text-xs overflow-y-auto max-h-[300px] pr-1">
+                    <div><label class="block font-semibold mb-0.5">Target ID *</label><input type="text" id="m_target_id" required class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">Mass [M☉]</label><input type="number" step="any" id="m_mass" class="w-full p-1 border rounded" placeholder="e.g. 0.4"></div>
+                    <div><label class="block font-semibold mb-0.5">Prot [days]</label><input type="number" step="any" id="m_prot" class="w-full p-1 border rounded" placeholder="Rotation period"></div>
+                    <div><label class="block font-semibold mb-0.5">Flare Rate [day⁻¹]</label><input type="number" step="any" id="m_flare_rate" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">Energy [ergs]</label><input type="text" id="m_energy" class="w-full p-1 border rounded" placeholder="e.g. 3.1e34"></div>
+                    <div><label class="block font-semibold mb-0.5">Energy Range Lower</label><input type="text" id="m_energy_min" class="w-full p-1 border rounded" placeholder="e.g. 1e31"></div>
+                    <div><label class="block font-semibold mb-0.5">Energy Range Upper</label><input type="text" id="m_energy_max" class="w-full p-1 border rounded" placeholder="e.g. 1e35"></div>
+                    <div><label class="block font-semibold mb-0.5">Total Obs Time [day]</label><input type="number" step="any" id="m_total_obs" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">Flux Error</label><input type="number" step="any" id="m_flux_err" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">Flux Median [W/m²]</label><input type="text" id="m_flux_med" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">TESS Luminosity [erg/s]</label><input type="text" id="m_tess_lum" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">Start Time [Julian day]</label><input type="number" step="any" id="m_start_time" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">End Time [Julian day]</label><input type="number" step="any" id="m_end_time" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">Flux Peak [W/m²]</label><input type="text" id="m_flux_peak" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">Duration [s]</label><input type="number" step="any" id="m_duration" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">TESS Sector</label><input type="number" id="m_sector" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">Sector Obs Time [day]</label><input type="number" step="any" id="m_sec_obs" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">Equivalent Duration [s]</label><input type="number" step="any" id="m_eq_dur" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">Number of Flares</label><input type="number" id="m_num_flares" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">TESS Cadence [s]</label><input type="number" step="any" id="m_cadence" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">FFD Slope α</label><input type="number" step="any" id="m_alpha" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">FFD Y-Int β</label><input type="number" step="any" id="m_beta" class="w-full p-1 border rounded"></div>
+                    <div><label class="block font-semibold mb-0.5">Energy of Saturation [ergs]</label><input type="text" id="m_sat_energy" class="w-full p-1 border rounded"></div>
+                    
+                    <button type="submit" class="w-full btn-success py-2 mt-2 font-bold rounded-lg border-2 border-black transition shadow">Incorporate Row</button>
+                </form>
             </div>
         </div>
 
-        <div class="lg:col-span-2 space-y-4">
-            <div class="card p-6 overflow-hidden">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                    <h2 class="text-xl font-bold">Stellar Flare Records</h2>
-                    <input type="text" id="searchInput" oninput="filterTable()" placeholder="Search Star ID..." class="p-2 border rounded w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-orange-400">
+        <div class="lg:col-span-3 space-y-0">
+            
+            <div class="flex items-end space-x-1 pl-2">
+                <button id="tabButtonFull" onclick="switchTab('full')" class="tab-btn tab-active px-4 py-2.5">
+                    📋 Full Parameters (19 Columns)
+                </button>
+                <button id="tabButtonCondensed" onclick="switchTab('condensed')" class="tab-btn tab-inactive px-4 py-2.5">
+                    🎯 Core Target Subsets
+                </button>
+            </div>
+
+            <div class="card p-5 relative rounded-tl-none border-t-2">
+                <div class="absolute right-4 bottom-4 opacity-5 pointer-events-none hidden xl:block">
+                    <img src="logo.png" alt="watermark" class="w-32 h-auto">
                 </div>
 
-                <div class="overflow-x-auto rounded border">
-                    <table class="w-full text-left border-collapse">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <h2 class="text-lg font-bold flex items-center gap-2">
+                        <span id="tableTitleDisplay">Database Catalog Registry</span>
+                        <span id="rowCountBadge" class="text-xs px-2 py-0.5 rounded bg-black text-white">0 rows</span>
+                        <span id="sqlFilteredIndicator" class="text-[10px] px-1.5 py-0.5 rounded badge-pink hidden">SQL Filter Active</span>
+                    </h2>
+                    <input type="text" id="tableFilter" oninput="applyTextFiltering()" placeholder="Fuzzy text search Target ID..." class="p-2 text-xs border-2 border-black rounded-lg w-full sm:w-64 focus:outline-none">
+                </div>
+
+                <div id="containerTableFull" class="overflow-x-auto rounded-lg border-2 border-black">
+                    <table class="w-full text-left table-auto whitespace-nowrap">
                         <thead>
                             <tr>
-                                <th class="p-3 text-sm font-semibold">Star ID</th>
-                                <th class="p-3 text-sm font-semibold">Peak Time</th>
-                                <th class="p-3 text-sm font-semibold">Eq. Duration (s)</th>
-                                <th class="p-3 text-sm font-semibold">Energy (ergs)</th>
-                                <th class="p-3 text-sm font-semibold text-center">Action</th>
+                                <th>Target ID</th>
+                                <th>Mass<br><span class="lowercase text-[9px] font-normal">[M☉]</span></th>
+                                <th>Prot<br><span class="lowercase text-[9px] font-normal">[days]</span></th>
+                                <th>Flare Rate<br><span class="lowercase text-[9px] font-normal">[day⁻¹]</span></th>
+                                <th>Energy<br><span class="lowercase text-[9px] font-normal">[ergs]</span></th>
+                                <th>Energy Range Min</th>
+                                <th>Energy Range Max</th>
+                                <th>Total Obs Time<br><span class="lowercase text-[9px] font-normal">[day]</span></th>
+                                <th>Flux Error</th>
+                                <th>Flux Median<br><span class="lowercase text-[9px] font-normal">[W/m²]</span></th>
+                                <th>TESS Lum<br><span class="lowercase text-[9px] font-normal">[erg/s]</span></th>
+                                <th>Start Time<br><span class="lowercase text-[9px] font-normal">[JD]</span></th>
+                                <th>End Time<br><span class="lowercase text-[9px] font-normal">[JD]</span></th>
+                                <th>Flux Peak<br><span class="lowercase text-[9px] font-normal">[W/m²]</span></th>
+                                <th>Duration<br><span class="lowercase text-[9px] font-normal">[s]</span></th>
+                                <th>Sector</th>
+                                <th>Sector Obs<br><span class="lowercase text-[9px] font-normal">[day]</span></th>
+                                <th>Eq. Duration<br><span class="lowercase text-[9px] font-normal">[s]</span></th>
+                                <th>Flares Count</th>
+                                <th>Cadence<br><span class="lowercase text-[9px] font-normal">[s]</span></th>
+                                <th>Slope α</th>
+                                <th>Y-Int β</th>
+                                <th>Sat. Energy<br><span class="lowercase text-[9px] font-normal">[ergs]</span></th>
+                                <th class="text-center bg-red-500">Drop</th>
                             </tr>
                         </thead>
-                        <tbody id="catalogBody" class="divide-y text-sm">
-                            </tbody>
+                        <tbody id="catalogDataTableBody" class="divide-y divide-gray-200 text-xs font-mono"></tbody>
                     </table>
                 </div>
+
+                <div id="containerTableCondensed" class="overflow-x-auto rounded-lg border-2 border-black hidden">
+                    <table class="w-full text-left table-auto whitespace-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Target ID</th>
+                                <th class="bg-blue-500">Mass [M☉]</th>
+                                <th class="bg-blue-500">Prot [days]</th>
+                                <th class="bg-purple-500">Energy Range [ergs]</th>
+                                <th class="bg-indigo-600">FFD Slope (α)</th>
+                                <th class="bg-indigo-600">Y-Intercept (β)</th>
+                                <th class="text-center bg-red-500">Drop</th>
+                            </tr>
+                        </thead>
+                        <tbody id="condensedDataTableBody" class="divide-y divide-gray-200 text-xs font-mono"></tbody>
+                    </table>
+                </div>
+
             </div>
         </div>
     </main>
 
     <script>
-        // Sample baseline data
-        const defaultData = [
-            { starId: "GJ 1243", peakTime: "2456789.12", eqDuration: 450.2, energy: "1.2e32" },
-            { starId: "AD Leo", peakTime: "2456801.45", eqDuration: 1200.0, energy: "5.6e33" },
-            { starId: "Proxima Centauri", peakTime: "2457120.89", eqDuration: 85.3, energy: "8.9e30" }
+        // Track visual tab states
+        let activeTab = 'full';
+
+        // Master underlying data arrays 
+        let catalogMasterData = [
+            { target_id: "TIC 1403913", mass: "0.35", prot: "3.42", flare_rate: "0.45", energy: "2.1e32", energy_min: "1.0e31", energy_max: "5.0e33", total_obs: "24.2", flux_err: "0.0012", flux_med: "1.04e-12", tess_lum: "3.0e31", start_time: "2458350.5", end_time: "2458374.7", flux_peak: "4.5e-11", duration: "840", sector: "1", sec_obs: "24.2", eq_dur: "142.5", num_flares: "11", cadence: "120", alpha: "-0.85", beta: "12.4", sat_energy: "5.0e33" },
+            { target_id: "TIC 2773141", mass: "0.21", prot: "0.54", flare_rate: "1.20", energy: "6.8e33", energy_min: "5.0e32", energy_max: "2.0e35", total_obs: "50.8", flux_err: "0.0009", flux_med: "4.12e-11", tess_lum: "8.5e32", start_time: "2458400.1", end_time: "2458450.9", flux_peak: "9.1e-10", duration: "1650", sector: "2", sec_obs: "25.1", eq_dur: "890.0", num_flares: "61", cadence: "20",  alpha: "-0.72", beta: "15.1", sat_energy: "1.2e35" }
         ];
+        
+        let catalogDisplayedData = [...catalogMasterData];
 
-        // Load data from localStorage or use defaults
-        let catalogData = JSON.parse(localStorage.getItem('ffd_data')) || [...defaultData];
+        function switchTab(targetTab) {
+            activeTab = targetTab;
+            const fullBtn = document.getElementById('tabButtonFull');
+            const condensedBtn = document.getElementById('tabButtonCondensed');
+            const fullContainer = document.getElementById('containerTableFull');
+            const condensedContainer = document.getElementById('containerTableCondensed');
+            const title = document.getElementById('tableTitleDisplay');
 
-        function renderTable() {
-            const tbody = document.getElementById('catalogBody');
-            tbody.innerHTML = '';
+            if (targetTab === 'full') {
+                fullBtn.className = "tab-btn tab-active px-4 py-2.5";
+                condensedBtn.className = "tab-btn tab-inactive px-4 py-2.5";
+                fullContainer.classList.remove('hidden');
+                condensedContainer.classList.add('hidden');
+                title.innerText = "Database Catalog Registry";
+            } else {
+                fullBtn.className = "tab-btn tab-inactive px-4 py-2.5";
+                condensedBtn.className = "tab-btn tab-active px-4 py-2.5";
+                fullContainer.classList.add('hidden');
+                condensedContainer.classList.remove('hidden');
+                title.innerText = "Target Properties & Slopes Only";
+            }
+            drawTable();
+        }
 
-            catalogData.forEach((flare, index) => {
-                const row = document.createElement('tr');
-                row.className = "hover:bg-orange-50 transition";
-                row.innerHTML = `
-                    <td class="p-3 font-medium">${escapeHtml(flare.starId)}</td>
-                    <td class="p-3 text-gray-600">${escapeHtml(flare.peakTime)}</td>
-                    <td class="p-3">${flare.eqDuration}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 rounded text-xs badge-pink">${flare.energy}</span></td>
-                    <td class="p-3 text-center">
-                        <button onclick="deleteRow(${index})" class="text-red-500 hover:text-red-700 font-bold px-2">✕</button>
-                    </td>
+        function drawTable(dataset = catalogDisplayedData) {
+            document.getElementById('rowCountBadge').innerText = `${dataset.length} rows`;
+            
+            // Render Primary Full Matrix Block
+            const fullBody = document.getElementById('catalogDataTableBody');
+            fullBody.innerHTML = '';
+            
+            // Render Condensed Core Matrix Block
+            const condensedBody = document.getElementById('condensedDataTableBody');
+            condensedBody.innerHTML = '';
+
+            if(dataset.length === 0) {
+                const emptyRow = `<tr><td colspan="25" class="p-6 text-center text-gray-400 tracking-wider italic">No rows found matching active parameters.</td></tr>`;
+                fullBody.innerHTML = emptyRow;
+                condensedBody.innerHTML = emptyRow;
+                return;
+            }
+
+            dataset.forEach((entry, idx) => {
+                // Populate Full Tab Rows
+                const trFull = document.createElement('tr');
+                trFull.className = "hover:bg-orange-50/50 transition";
+                trFull.innerHTML = `
+                    <td class="p-2 font-bold text-gray-900">${sanitize(entry.target_id)}</td>
+                    <td class="p-2 text-blue-600 font-semibold">${sanitize(entry.mass || '—')}</td>
+                    <td class="p-2 text-blue-600 font-semibold">${sanitize(entry.prot || '—')}</td>
+                    <td class="p-2">${sanitize(entry.flare_rate)}</td>
+                    <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[10px] badge-pink">${sanitize(entry.energy)}</span></td>
+                    <td class="p-2 text-gray-500 text-[11px]">${sanitize(entry.energy_min || '—')}</td>
+                    <td class="p-2 text-gray-500 text-[11px]">${sanitize(entry.energy_max || '—')}</td>
+                    <td class="p-2">${sanitize(entry.total_obs)}</td>
+                    <td class="p-2 text-gray-500">${sanitize(entry.flux_err)}</td>
+                    <td class="p-2">${sanitize(entry.flux_med)}</td>
+                    <td class="p-2">${sanitize(entry.tess_lum)}</td>
+                    <td class="p-2 text-gray-500">${sanitize(entry.start_time)}</td>
+                    <td class="p-2 text-gray-500">${sanitize(entry.end_time)}</td>
+                    <td class="p-2">${sanitize(entry.flux_peak)}</td>
+                    <td class="p-2">${sanitize(entry.duration)}</td>
+                    <td class="p-2">${sanitize(entry.sector)}</td>
+                    <td class="p-2">${sanitize(entry.sec_obs)}</td>
+                    <td class="p-2">${sanitize(entry.eq_dur)}</td>
+                    <td class="p-2 font-bold">${sanitize(entry.num_flares)}</td>
+                    <td class="p-2 text-gray-400">${sanitize(entry.cadence)}</td>
+                    <td class="p-2 text-blue-600 font-bold">${sanitize(entry.alpha)}</td>
+                    <td class="p-2 text-blue-600 font-bold">${sanitize(entry.beta)}</td>
+                    <td class="p-2 text-purple-700">${sanitize(entry.sat_energy)}</td>
+                    <td class="p-2 text-center"><button onclick="dropRow(${idx})" class="text-red-500 hover:text-red-700 transition font-bold px-1">✕</button></td>
                 `;
-                tbody.appendChild(row);
+                fullBody.appendChild(trFull);
+
+                // Populate Condensed Targeted Properties Tab Rows
+                const trCond = document.createElement('tr');
+                trCond.className = "hover:bg-orange-50/50 transition";
+                
+                // Formulate a clean range expression string metric view context
+                let rangeStr = '—';
+                if (entry.energy_min || entry.energy_max) {
+                    rangeStr = `[${entry.energy_min || '?'} , ${entry.energy_max || '?'}]`;
+                }
+
+                trCond.innerHTML = `
+                    <td class="p-3 font-bold text-gray-900">${sanitize(entry.target_id)}</td>
+                    <td class="p-3 font-semibold text-gray-800">${sanitize(entry.mass || '—')}</td>
+                    <td class="p-3 font-semibold text-gray-800">${sanitize(entry.prot || '—')}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded bg-purple-50 border border-purple-300 text-purple-800 text-[11px] font-semibold">${sanitize(rangeStr)}</span></td>
+                    <td class="p-3 text-indigo-600 font-bold text-sm">${sanitize(entry.alpha)}</td>
+                    <td class="p-3 text-indigo-400 font-bold">${sanitize(entry.beta)}</td>
+                    <td class="p-3 text-center"><button onclick="dropRow(${idx})" class="text-red-500 hover:text-red-700 transition font-bold px-1">✕</button></td>
+                `;
+                condensedBody.appendChild(trCond);
             });
         }
 
-        // Add Data Form Handler
-        document.getElementById('flareForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const newFlare = {
-                starId: document.getElementById('starId').value,
-                peakTime: document.getElementById('peakTime').value,
-                eqDuration: parseFloat(document.getElementById('eqDuration').value),
-                energy: document.getElementById('energy').value
-            };
+        // --- SQL Engine Functions ---
+        function executeSQLQuery() {
+            const queryStr = document.getElementById('sqlTerminalInput').value.trim();
+            if(!queryStr) return alert("Write an SQL operation to run.");
 
-            catalogData.push(newFlare);
-            saveData();
-            renderTable();
-            this.reset();
-        });
-
-        // Delete Row
-        function deleteRow(index) {
-            catalogData.splice(index, 1);
-            saveData();
-            renderTable();
-        }
-
-        // Local Storage Utilities
-        function saveData() {
-            localStorage.setItem('ffd_data', JSON.stringify(catalogData));
-        }
-
-        function resetData() {
-            if(confirm("Reset catalog back to initial sample values?")) {
-                catalogData = [...defaultData];
-                saveData();
-                renderTable();
+            try {
+                const results = alasql(queryStr, [catalogMasterData]);
+                if (Array.isArray(results)) {
+                    catalogDisplayedData = results;
+                    document.getElementById('sqlFilteredIndicator').classList.remove('hidden');
+                    drawTable();
+                } else {
+                    alert("Query parsed successfully but did not produce an array pipeline.");
+                }
+            } catch(err) {
+                alert("SQL Parsing Error:\n" + err.message);
             }
         }
 
-        // Live table filtering
-        function filterTable() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('#catalogBody tr');
-            
-            rows.forEach((row, index) => {
-                const starName = catalogData[index].starId.toLowerCase();
-                if(starName.includes(query)) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
+        function resetSQLView() {
+            catalogDisplayedData = [...catalogMasterData];
+            document.getElementById('sqlFilteredIndicator').classList.add('hidden');
+            document.getElementById('tableFilter').value = '';
+            drawTable();
+        }
+
+        function downloadSQLSelectionCSV() {
+            if(catalogDisplayedData.length === 0) return alert("No items ready for export.");
+            const csvOutputString = Papa.unparse(catalogDisplayedData);
+            const dataBlob = new Blob([csvOutputString], { type: 'text/csv;charset=utf-8;' });
+            const temporaryDownloadAnchor = document.createElement('a');
+            temporaryDownloadAnchor.setAttribute('href', URL.createObjectURL(dataBlob));
+            temporaryDownloadAnchor.setAttribute('download', 'ffd_catalog_export.csv');
+            temporaryDownloadAnchor.click();
+        }
+
+        function fetchFromGitHubCSV() {
+            const url = document.getElementById('csvUrlInput').value.trim();
+            if(!url) return alert("Please specify a real URL pathway first!");
+
+            Papa.parse(url, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    if(results.data && results.data.length > 0) {
+                        catalogMasterData = results.data.map(row => ({
+                            target_id:  row['Target ID'] || row['target_id'] || Object.values(row)[0] || '',
+                            mass:       row['Mass'] || row['mass'] || row['M_star'] || '',
+                            prot:       row['Prot'] || row['prot'] || row['P_rot'] || '',
+                            flare_rate: row['Flare Rate [day^-1]'] || row['Flare Rate'] || row['flare_rate'] || '',
+                            energy:     row['Energy [ergs]'] || row['Energy'] || row['energy'] || '',
+                            energy_min: row['Energy Range Min'] || row['energy_min'] || '',
+                            energy_max: row['Energy Range Max'] || row['energy_max'] || '',
+                            total_obs:  row['Total Obs Time [day]'] || row['total_obs'] || '',
+                            flux_err:   row['Flux Error'] || row['flux_error'] || '',
+                            flux_med:   row['Flux Median [W/m^2]'] || row['flux_median'] || '',
+                            tess_lum:   row['TESS Luminosity [erg/s]'] || row['tess_luminosity'] || '',
+                            start_time: row['Start Time [Julian day]'] || row['start_time'] || '',
+                            end_time:   row['End Time [Julian day]'] || row['end_time'] || '',
+                            flux_peak:  row['Flux Peak [W/m^2]'] || row['flux_peak'] || '',
+                            duration:   row['Duration [s]'] || row['duration'] || '',
+                            sector:     row['TESS Sector'] || row['sector'] || '',
+                            sec_obs:    row['Sector Obs Time [day]'] || row['sector_obs_time'] || '',
+                            eq_dur:     row['Equivalent Duration [s]'] || row['equivalent_duration'] || '',
+                            num_flares: row['Number of Flares'] || row['number_of_flares'] || '',
+                            cadence:    row['TESS Cadence [s]'] || row['tess_cadence'] || '',
+                            alpha:      row['FFD Slope \\alpha'] || row['alpha'] || row['slope'] || '',
+                            beta:       row['FFD Y-Int \\beta'] || row['beta'] || row['y_intercept'] || '',
+                            sat_energy: row['Energy of Saturation [ergs]'] || row['energy_of_saturation'] || ''
+                        }));
+                        resetSQLView();
+                    }
+                },
+                error: function() { alert("Failed to interpret remote CSV file data."); }
             });
         }
 
-        // GitHub Integration Sync Framework
-        function syncFromGitHub() {
-            alert("To directly fetch/push updates from your live GitHub repository pipeline, configure an active API endpoint or use a workflows workflow action to auto-generate a static JSON array data file in your repo branch!");
-            // Dynamic execution placeholder:
-            // fetch('https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/data.json')
-            // .then(res => res.json()).then(data => { catalogData = data; renderTable(); });
+        document.getElementById('metricsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            catalogMasterData.push({
+                target_id: document.getElementById('m_target_id').value,
+                mass: document.getElementById('m_mass').value,
+                prot: document.getElementById('m_prot').value,
+                flare_rate: document.getElementById('m_flare_rate').value,
+                energy: document.getElementById('m_energy').value,
+                energy_min: document.getElementById('m_energy_min').value,
+                energy_max: document.getElementById('m_energy_max').value,
+                total_obs: document.getElementById('m_total_obs').value,
+                flux_err: document.getElementById('m_flux_err').value,
+                flux_med: document.getElementById('m_flux_med').value,
+                tess_lum: document.getElementById('m_tess_lum').value,
+                start_time: document.getElementById('m_start_time').value,
+                end_time: document.getElementById('m_end_time').value,
+                flux_peak: document.getElementById('m_flux_peak').value,
+                duration: document.getElementById('m_duration').value,
+                sector: document.getElementById('m_sector').value,
+                sec_obs: document.getElementById('m_sec_obs').value,
+                eq_dur: document.getElementById('m_eq_dur').value,
+                num_flares: document.getElementById('m_num_flares').value,
+                cadence: document.getElementById('m_cadence').value,
+                alpha: document.getElementById('m_alpha').value,
+                beta: document.getElementById('m_beta').value,
+                sat_energy: document.getElementById('m_sat_energy').value
+            });
+            resetSQLView();
+            this.reset();
+        });
+
+        function dropRow(idx) {
+            const id = catalogDisplayedData[idx].target_id;
+            catalogMasterData = catalogMasterData.filter(item => item.target_id !== id);
+            catalogDisplayedData.splice(idx, 1);
+            drawTable();
         }
 
-        function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        function applyTextFiltering() {
+            const query = document.getElementById('tableFilter').value.toLowerCase();
+            drawTable(catalogDisplayedData.filter(item => item.target_id.toLowerCase().includes(query)));
         }
 
-        // Initial setup run
-        renderTable();
+        function sanitize(val) {
+            if (val === undefined || val === null) return '';
+            return String(val).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        drawTable();
     </script>
 </body>
 </html>
