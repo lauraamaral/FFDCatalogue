@@ -54,7 +54,7 @@
     <header class="header-bg p-4 shadow-md mb-6 border-b-4" style="border-color: var(--color-pink);">
         <div class="max-w-[95%] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
             <a href="#" class="flex items-center transition transform hover:scale-102">
-                <img src="logo.png" alt="The FFD Catalog Logo" class="h-16 w-auto object-contain" onerror="this.style.display='none'; document.getElementById('alt-logo').style.display='block';">
+                <img src="logo.png?v=2" alt="The FFD Catalog Logo" class="h-16 w-auto object-contain bg-transparent" onerror="this.style.display='none'; document.getElementById('alt-logo').style.display='block';">
                 <h1 id="alt-logo" class="text-2xl font-bold tracking-wide hidden" style="color: var(--color-yellow);">FFD Catalog</h1>
             </a>
             <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-right">
@@ -146,7 +146,7 @@
                     <span class="w-3 h-3 rounded-full" style="background-color: var(--color-pink);"></span>
                     Propose New Coefficients
                 </h2>
-                <p class="text-[11px] text-gray-500 mb-2">Submitted data will enter the moderation queue for website owner verification before appearing in tables.</p>
+                <p class="text-[11px] text-gray-500 mb-2"> Submitted data will enter the moderation queue for website owner verification before appearing in tables. You can also open a pull request at the <a href="https://github.com/lauraamaral/FFDCatalogue" target="_blank" class="text-blue-600 hover:underline font-semibold">GitHub</a> repository to submit your data.</p>
                 <form id="metricsForm" class="space-y-2 text-xs overflow-y-auto max-h-[300px] pr-1">
                     <div><label class="block font-semibold mb-0.5">Target ID *</label><input type="text" id="m_target_id" required class="w-full p-1 border rounded" placeholder="e.g. TIC 104123038"></div>
                     <div><label class="block font-semibold mb-0.5">Temperature [K]</label><input type="number" step="any" id="m_temperature" class="w-full p-1 border rounded" placeholder="e.g. 3200"></div>
@@ -192,28 +192,126 @@
                         <table class="w-full text-left table-auto whitespace-nowrap">
                             <thead>
                                 <tr>
-                                    <th>target_id</th>
-                                    <th>temperature<br><span class="lowercase text-[9px] font-normal">[K]</span></th>
-                                    <th>flare_rate<br><span class="lowercase text-[9px] font-normal">[day⁻¹]</span></th>
-                                    <th>energy<br><span class="lowercase text-[9px] font-normal">[ergs]</span></th>
-                                    <th>energy_min</th>
-                                    <th>energy_max</th>
-                                    <th>total_obs<br><span class="lowercase text-[9px] font-normal">[day]</span></th>
-                                    <th>flux_err</th>
-                                    <th>flux_med<br><span class="lowercase text-[9px] font-normal">[W/m²]</span></th>
-                                    <th>tess_lum<br><span class="lowercase text-[9px] font-normal">[erg/s]</span></th>
-                                    <th>start_time<br><span class="lowercase text-[9px] font-normal">[JD]</span></th>
-                                    <th>end_time<br><span class="lowercase text-[9px] font-normal">[JD]</span></th>
-                                    <th>flux_peak<br><span class="lowercase text-[9px] font-normal">[W/m²]</span></th>
-                                    <th>duration<br><span class="lowercase text-[9px] font-normal">[s]</span></th>
-                                    <th>sector</th>
-                                    <th>sector_obs<br><span class="lowercase text-[9px] font-normal">[day]</span></th>
-                                    <th>eq_dur<br><span class="lowercase text-[9px] font-normal">[s]</span></th>
-                                    <th>flares_count</th>
-                                    <th>cadence<br><span class="lowercase text-[9px] font-normal">[s]</span></th>
-                                    <th>alpha</th>
-                                    <th>beta</th>
-                                    <th>sat_energy<br><span class="lowercase text-[9px] font-normal">[ergs]</span></th>
+                                    <th class="relative group cursor-help">
+                                        target_id
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Target ID:</span> Unique astronomical identifier from catalogs like TESS (TIC), Gaia (DR3), or 2MASS.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        temperature<br><span class="lowercase text-[9px] font-normal">[K]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Effective Temperature:</span> Stellar effective temperature ($T_{\text{eff}}$) calibrated in Kelvin.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        flare_rate<br><span class="lowercase text-[9px] font-normal">[day⁻¹]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Flare Rate:</span> Cumulative Frequency of flares observed per day in $\log_{10}$ space.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        energy<br><span class="lowercase text-[9px] font-normal">[ergs]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Flare Energy:</span> $\log_{10}$ Flare energy in ergs.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        energy_min
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Energy Min:</span> Minimum flare energy detected.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        energy_max
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Energy Max:</span> Maximum flare energy detected.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        total_obs<br><span class="lowercase text-[9px] font-normal">[day]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Total Obs Time:</span> Total observed time across all sectors.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        flux_err
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Flux Error:</span> Average flux  uncertainty.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        flux_med<br><span class="lowercase text-[9px] font-normal">[W/m²]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Flux Median:</span> Flux median during the lifespan of the flare event measured in relative flux units.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        tess_lum<br><span class="lowercase text-[9px] font-normal">[erg/s]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">TESS Luminosity:</span> Stellar luminosity within the TESS sensor passband in solar units considering Vega as the T=0 magnitude.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        start_time<br><span class="lowercase text-[9px] font-normal">[JD]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Start Time:</span> Flare event start time in Julian Date ($BJD - 2457000$).
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        end_time<br><span class="lowercase text-[9px] font-normal">[JD]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">End Time:</span> Flare event end time in Julian Date ($BJD - 2457000$).
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        duration<br><span class="lowercase text-[9px] font-normal">[s]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Duration:</span> Flare event total duration in seconds.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        sector_obs<br><span class="lowercase text-[9px] font-normal">[day]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Sector Obs Time:</span> Observation time within a single sector.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        eq_dur<br><span class="lowercase text-[9px] font-normal">[s]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Equivalent Duration:</span> Integrated area under the flare light curve relative to stellar background level.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        flares_count
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Flares Count:</span> Total stellar flare events per target.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        cadence<br><span class="lowercase text-[9px] font-normal">[s]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Cadence:</span> TESS mission instrument sampling interval rate (e.g., Fast 20s or Standard 120s mode).
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        alpha
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">FFD Alpha ($\alpha$):</span> Power-law index slope/inclination from the FFD considering log10 flare_rate = $\alpha$ * log10(E) + $\beta$.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        beta
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">FFD Beta ($\beta$):</span> Y-Intercept from the FFD considering log10 flare_rate = $\alpha$ * log10(E) + $\beta$.
+                                        </div>
+                                    </th>
+                                    <th class="relative group cursor-help">
+                                        sat_energy<br><span class="lowercase text-[9px] font-normal">[ergs]</span>
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Saturation Energy:</span> Limit of flare energy detection due to TESS instrument saturation threshold.
+                                        </div>
+                                    </th>
                                     <th class="text-center bg-red-500 font-normal">Drop</th>
                                 </tr>
                             </thead>
@@ -225,11 +323,36 @@
                         <table class="w-full text-left table-auto whitespace-nowrap">
                             <thead>
                                 <tr>
-                                    <th>target_id</th>
-                                    <th class="bg-blue-500">temperature [K]</th>
-                                    <th class="bg-purple-500">Energy Range [ergs]</th>
-                                    <th class="bg-indigo-600 font-bold text-xs lowercase font-mono">alpha (α)</th>
-                                    <th class="bg-indigo-600 font-bold text-xs lowercase font-mono">beta (β)</th>
+                                    <th class="relative group cursor-help">
+                                        target_id
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Target ID:</span> Unique astronomical catalog identifier (e.g., TESS Input Catalog ID).
+                                        </div>
+                                    </th>
+                                    <th class="bg-blue-500 relative group cursor-help">
+                                        temperature [K]
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Temperature:</span> Effective stellar surface temperature scaling parameter ($T_{\text{eff}}$).
+                                        </div>
+                                    </th>
+                                    <th class="bg-purple-500 relative group cursor-help">
+                                        Energy Range [ergs]
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">Energy Bounds:</span> Comprehensive boundaries mapping minimum and maximum evaluated flare energy ranges.
+                                        </div>
+                                    </th>
+                                    <th class="bg-indigo-600 font-bold text-xs lowercase font-mono relative group cursor-help">
+                                        alpha (α)
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">FFD Slope ($\alpha$):</span> Power-law exponential distribution fit line slope index parameter.
+                                        </div>
+                                    </th>
+                                    <th class="bg-indigo-600 font-bold text-xs lowercase font-mono relative group cursor-help">
+                                        beta (β)
+                                        <div class="hidden group-hover:flex absolute left-0 top-full mt-1 w-48 bg-gray-900 text-white text-[10px] font-sans normal-case rounded p-2 shadow-lg border border-black z-50 whitespace-normal flex-col gap-1">
+                                            <span class="font-bold text-amber-400">FFD Intercept ($\beta$):</span> Mathematical Y-axis intercept tracking active event frequency distribution metrics.
+                                        </div>
+                                    </th>
                                     <th class="text-center bg-red-500 font-normal">Drop</th>
                                 </tr>
                             </thead>
@@ -271,7 +394,7 @@
     <script>
         let activeTab = 'full';
         let isAdminUnlocked = false;
-        const OWNER_SECRET_KEY = "admin123";
+        const OWNER_SECRET_KEY = "Beresimpatia31";
 
         // Converts value safely to a float if numeric, or returns as clean string
         function cleanNumeric(val) {
