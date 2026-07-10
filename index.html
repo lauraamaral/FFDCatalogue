@@ -57,9 +57,13 @@
                 <img src="logo.png" alt="The FFD Catalog Logo" class="h-16 w-auto object-contain" onerror="this.style.display='none'; document.getElementById('alt-logo').style.display='block';">
                 <h1 id="alt-logo" class="text-2xl font-bold tracking-wide hidden" style="color: var(--color-yellow);">FFD Catalog</h1>
             </a>
-            <div class="text-center sm:text-right">
-                <p class="text-sm font-semibold tracking-wider uppercase" style="color: var(--color-yellow);">Stellar Flare Cataloging Portal</p>
-                <p class="text-xs opacity-70">Client SQL Workspace Engine • 19 Parameters</p>
+            <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-right">
+                <div>
+                    <p class="text-sm font-semibold tracking-wider uppercase" style="color: var(--color-yellow);">Flare Frequency Distribution Catalog Portal</p>
+                </div>
+                <button id="adminGateBtn" onclick="toggleAdminAccess()" class="px-3 py-1.5 border border-dashed rounded text-xs transition font-semibold tracking-wide hover:bg-white/10" style="color: var(--color-blue); border-color: var(--color-blue);">
+                    🔐 Owner Login
+                </button>
             </div>
         </div>
     </header>
@@ -76,7 +80,7 @@
                     <div>
                         <label class="block font-bold mb-1 opacity-75">Raw GitHub CSV URL:</label>
                         <input type="url" id="csvUrlInput" class="w-full p-2 border-2 border-black rounded text-xs" 
-                               value="https://raw.githubusercontent.com/jradavenport/FFD/master/example_data.csv" placeholder="https://raw.githubusercontent.com/.../data.csv">
+                               value="https://raw.githubusercontent.com/lauraamaral/FFDCatalogue/main/FFD_catalogue.csv" placeholder="https://raw.githubusercontent.com/.../data.csv">
                     </div>
                     <button onclick="fetchFromGitHubCSV()" class="w-full btn-primary py-2 font-bold rounded-lg transition border-2 border-black shadow">
                         Fetch & Parse CSV
@@ -91,10 +95,37 @@
                 </h2>
                 <div class="space-y-3 text-xs">
                     <p class="text-[11px] text-gray-600 leading-relaxed">
-                        Query the dataset active memory context using standard SQL. The dynamic matrix target keyword is <code class="bg-gray-100 px-1 font-mono font-bold">?</code>.
+                        Query the active dataset memory context. Use <code class="bg-gray-100 px-1 font-mono font-bold font-sans text-red-500">?</code> as the table target.
                     </p>
+                    <div class="bg-gray-50 p-2 rounded border border-gray-300 font-mono text-[10px] space-y-1 text-gray-700">
+                        <span class="font-bold block uppercase text-gray-500 tracking-wider">Valid Query Columns:</span>
+                        <div class="grid grid-cols-2 gap-1">
+                            <span>• target_id</span>
+                            <span>• temperature</span>
+                            <span>• flare_rate</span>
+                            <span>• energy</span>
+                            <span>• energy_min</span>
+                            <span>• energy_max</span>
+                            <span>• total_obs</span>
+                            <span>• flux_err</span>
+                            <span>• flux_med</span>
+                            <span>• tess_lum</span>
+                            <span>• start_time</span>
+                            <span>• end_time</span>
+                            <span>• flux_peak</span>
+                            <span>• duration</span>
+                            <span>• sector</span>
+                            <span>• sector_obs</span>
+                            <span>• eq_dur</span>
+                            <span>• flares_count</span>
+                            <span>• cadence</span>
+                            <span>• alpha</span>
+                            <span>• beta</span>
+                            <span>• sat_energy</span>
+                        </div>
+                    </div>
                     <div>
-                        <textarea id="sqlTerminalInput" rows="4" class="w-full p-2 font-mono text-[11px] border-2 border-black rounded bg-gray-50 focus:bg-white focus:outline-none">SELECT * FROM ? WHERE duration > 100</textarea>
+                        <textarea id="sqlTerminalInput" rows="4" class="w-full p-2 font-mono text-[11px] border-2 border-black rounded bg-gray-50 focus:bg-white focus:outline-none">SELECT * FROM ? WHERE temperature &lt; 3500 AND duration &gt; 100</textarea>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="executeSQLQuery()" class="btn-warning py-2 font-bold rounded-lg transition border-2 border-black shadow text-center">
@@ -112,130 +143,172 @@
 
             <div class="card p-5">
                 <h2 class="text-md font-bold mb-3 flex items-center gap-2 border-b pb-2">
-                    <span class="w-3 h-3 rounded-full" style="background-color: var(--color-green);"></span>
-                    Add Record Manually
+                    <span class="w-3 h-3 rounded-full" style="background-color: var(--color-pink);"></span>
+                    Propose New Coefficients
                 </h2>
+                <p class="text-[11px] text-gray-500 mb-2">Submitted data will enter the moderation queue for website owner verification before appearing in tables.</p>
                 <form id="metricsForm" class="space-y-2 text-xs overflow-y-auto max-h-[300px] pr-1">
-                    <div><label class="block font-semibold mb-0.5">Target ID *</label><input type="text" id="m_target_id" required class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">Mass [M☉]</label><input type="number" step="any" id="m_mass" class="w-full p-1 border rounded" placeholder="e.g. 0.4"></div>
-                    <div><label class="block font-semibold mb-0.5">Prot [days]</label><input type="number" step="any" id="m_prot" class="w-full p-1 border rounded" placeholder="Rotation period"></div>
-                    <div><label class="block font-semibold mb-0.5">Flare Rate [day⁻¹]</label><input type="number" step="any" id="m_flare_rate" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">Energy [ergs]</label><input type="text" id="m_energy" class="w-full p-1 border rounded" placeholder="e.g. 3.1e34"></div>
-                    <div><label class="block font-semibold mb-0.5">Energy Range Lower</label><input type="text" id="m_energy_min" class="w-full p-1 border rounded" placeholder="e.g. 1e31"></div>
-                    <div><label class="block font-semibold mb-0.5">Energy Range Upper</label><input type="text" id="m_energy_max" class="w-full p-1 border rounded" placeholder="e.g. 1e35"></div>
-                    <div><label class="block font-semibold mb-0.5">Total Obs Time [day]</label><input type="number" step="any" id="m_total_obs" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">Flux Error</label><input type="number" step="any" id="m_flux_err" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">Flux Median [W/m²]</label><input type="text" id="m_flux_med" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">TESS Luminosity [erg/s]</label><input type="text" id="m_tess_lum" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">Start Time [Julian day]</label><input type="number" step="any" id="m_start_time" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">End Time [Julian day]</label><input type="number" step="any" id="m_end_time" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">Flux Peak [W/m²]</label><input type="text" id="m_flux_peak" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">Duration [s]</label><input type="number" step="any" id="m_duration" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">TESS Sector</label><input type="number" id="m_sector" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">Sector Obs Time [day]</label><input type="number" step="any" id="m_sec_obs" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">Equivalent Duration [s]</label><input type="number" step="any" id="m_eq_dur" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">Number of Flares</label><input type="number" id="m_num_flares" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">TESS Cadence [s]</label><input type="number" step="any" id="m_cadence" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">FFD Slope α</label><input type="number" step="any" id="m_alpha" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">FFD Y-Int β</label><input type="number" step="any" id="m_beta" class="w-full p-1 border rounded"></div>
-                    <div><label class="block font-semibold mb-0.5">Energy of Saturation [ergs]</label><input type="text" id="m_sat_energy" class="w-full p-1 border rounded"></div>
-                    
-                    <button type="submit" class="w-full btn-success py-2 mt-2 font-bold rounded-lg border-2 border-black transition shadow">Incorporate Row</button>
+                    <div><label class="block font-semibold mb-0.5">Target ID *</label><input type="text" id="m_target_id" required class="w-full p-1 border rounded" placeholder="e.g. TIC 104123038"></div>
+                    <div><label class="block font-semibold mb-0.5">Temperature [K]</label><input type="number" step="any" id="m_temperature" class="w-full p-1 border rounded" placeholder="e.g. 3200"></div>
+                    <div><label class="block font-semibold mb-0.5">FFD Slope α *</label><input type="number" step="any" id="m_alpha" required class="w-full p-1 border rounded" placeholder="e.g. -0.66"></div>
+                    <div><label class="block font-semibold mb-0.5">FFD Y-Int β *</label><input type="number" step="any" id="m_beta" required class="w-full p-1 border rounded" placeholder="e.g. 20.32"></div>
+                    <div><label class="block font-semibold mb-0.5">Energy Range Lower [ergs]</label><input type="text" id="m_energy_min" class="w-full p-1 border rounded" placeholder="e.g. 1e31"></div>
+                    <div><label class="block font-semibold mb-0.5">Energy Range Upper [ergs]</label><input type="text" id="m_energy_max" class="w-full p-1 border rounded" placeholder="e.g. 1e35"></div>
+                    <div><label class="block font-semibold mb-0.5">Total Obs Time [days]</label><input type="number" step="any" id="m_total_obs" class="w-full p-1 border rounded" placeholder="e.g. 46.49"></div>
+                    <div><label class="block font-semibold mb-0.5">Number of Flares</label><input type="number" id="m_flares_count" class="w-full p-1 border rounded" placeholder="e.g. 12"></div>
+                    <div><label class="block font-semibold mb-0.5">Source [DOI]</label><input type="text" id="m_source" class="w-full p-1 border rounded" placeholder="e.g. 10.1088/..."></div>
+
+                    <button type="submit" class="w-full btn-success py-2 mt-2 font-bold rounded-lg border-2 border-black transition shadow">Submit for Approval</button>
                 </form>
             </div>
         </div>
 
-        <div class="lg:col-span-3 space-y-0">
-            
-            <div class="flex items-end space-x-1 pl-2">
-                <button id="tabButtonFull" onclick="switchTab('full')" class="tab-btn tab-active px-4 py-2.5">
-                    📋 Full Parameters (19 Columns)
-                </button>
-                <button id="tabButtonCondensed" onclick="switchTab('condensed')" class="tab-btn tab-inactive px-4 py-2.5">
-                    🎯 Core Target Subsets
-                </button>
+        <div class="lg:col-span-3 space-y-6">
+            <div>
+                <div class="flex items-end space-x-1 pl-2">
+                    <button id="tabButtonFull" onclick="switchTab('full')" class="tab-btn tab-active px-4 py-2.5">
+                        📋 Full Parameters (18 Columns)
+                    </button>
+                    <button id="tabButtonCondensed" onclick="switchTab('condensed')" class="tab-btn tab-inactive px-4 py-2.5">
+                        🎯 FFD Coefficients
+                    </button>
+                </div>
+
+                <div class="card p-5 relative rounded-tl-none border-t-2">
+                    <div class="absolute right-4 bottom-4 opacity-5 pointer-events-none hidden xl:block">
+                        <img src="logo.png" alt="watermark" class="w-32 h-auto">
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <h2 class="text-lg font-bold flex items-center gap-2">
+                            <span id="tableTitleDisplay">Database Catalog Registry</span>
+                            <span id="rowCountBadge" class="text-xs px-2 py-0.5 rounded bg-black text-white">0 rows</span>
+                            <span id="sqlFilteredIndicator" class="text-[10px] px-1.5 py-0.5 rounded badge-pink hidden">SQL Filter Active</span>
+                        </h2>
+                        <input type="text" id="tableFilter" oninput="applyTextFiltering()" placeholder="Search Target ID..." class="p-2 text-xs border-2 border-black rounded-lg w-full sm:w-64 focus:outline-none">
+                    </div>
+
+                    <div id="containerTableFull" class="overflow-x-auto rounded-lg border-2 border-black">
+                        <table class="w-full text-left table-auto whitespace-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>target_id</th>
+                                    <th>temperature<br><span class="lowercase text-[9px] font-normal">[K]</span></th>
+                                    <th>flare_rate<br><span class="lowercase text-[9px] font-normal">[day⁻¹]</span></th>
+                                    <th>energy<br><span class="lowercase text-[9px] font-normal">[ergs]</span></th>
+                                    <th>energy_min</th>
+                                    <th>energy_max</th>
+                                    <th>total_obs<br><span class="lowercase text-[9px] font-normal">[day]</span></th>
+                                    <th>flux_err</th>
+                                    <th>flux_med<br><span class="lowercase text-[9px] font-normal">[W/m²]</span></th>
+                                    <th>tess_lum<br><span class="lowercase text-[9px] font-normal">[erg/s]</span></th>
+                                    <th>start_time<br><span class="lowercase text-[9px] font-normal">[JD]</span></th>
+                                    <th>end_time<br><span class="lowercase text-[9px] font-normal">[JD]</span></th>
+                                    <th>flux_peak<br><span class="lowercase text-[9px] font-normal">[W/m²]</span></th>
+                                    <th>duration<br><span class="lowercase text-[9px] font-normal">[s]</span></th>
+                                    <th>sector</th>
+                                    <th>sector_obs<br><span class="lowercase text-[9px] font-normal">[day]</span></th>
+                                    <th>eq_dur<br><span class="lowercase text-[9px] font-normal">[s]</span></th>
+                                    <th>flares_count</th>
+                                    <th>cadence<br><span class="lowercase text-[9px] font-normal">[s]</span></th>
+                                    <th>alpha</th>
+                                    <th>beta</th>
+                                    <th>sat_energy<br><span class="lowercase text-[9px] font-normal">[ergs]</span></th>
+                                    <th class="text-center bg-red-500 font-normal">Drop</th>
+                                </tr>
+                            </thead>
+                            <tbody id="catalogDataTableBody" class="divide-y divide-gray-200 text-xs font-mono"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="containerTableCondensed" class="overflow-x-auto rounded-lg border-2 border-black hidden">
+                        <table class="w-full text-left table-auto whitespace-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>target_id</th>
+                                    <th class="bg-blue-500">temperature [K]</th>
+                                    <th class="bg-purple-500">Energy Range [ergs]</th>
+                                    <th class="bg-indigo-600 font-bold text-xs lowercase font-mono">alpha (α)</th>
+                                    <th class="bg-indigo-600 font-bold text-xs lowercase font-mono">beta (β)</th>
+                                    <th class="text-center bg-red-500 font-normal">Drop</th>
+                                </tr>
+                            </thead>
+                            <tbody id="condensedDataTableBody" class="divide-y divide-gray-200 text-xs font-mono"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
-            <div class="card p-5 relative rounded-tl-none border-t-2">
-                <div class="absolute right-4 bottom-4 opacity-5 pointer-events-none hidden xl:block">
-                    <img src="logo.png" alt="watermark" class="w-32 h-auto">
-                </div>
-
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                    <h2 class="text-lg font-bold flex items-center gap-2">
-                        <span id="tableTitleDisplay">Database Catalog Registry</span>
-                        <span id="rowCountBadge" class="text-xs px-2 py-0.5 rounded bg-black text-white">0 rows</span>
-                        <span id="sqlFilteredIndicator" class="text-[10px] px-1.5 py-0.5 rounded badge-pink hidden">SQL Filter Active</span>
-                    </h2>
-                    <input type="text" id="tableFilter" oninput="applyTextFiltering()" placeholder="Fuzzy text search Target ID..." class="p-2 text-xs border-2 border-black rounded-lg w-full sm:w-64 focus:outline-none">
-                </div>
-
-                <div id="containerTableFull" class="overflow-x-auto rounded-lg border-2 border-black">
-                    <table class="w-full text-left table-auto whitespace-nowrap">
-                        <thead>
+            <div id="ownerModerationGate" class="card p-5 border-2 border-black hidden">
+                <h2 class="text-md font-bold mb-2 flex items-center gap-2 border-b pb-2">
+                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                    Website Owner Moderation Gate: FFD Coefficients Submissions
+                    <span id="queueCountBadge" class="text-xs px-2 py-0.5 rounded bg-amber-600 text-white font-mono">0 pending</span>
+                </h2>
+                <div class="overflow-x-auto rounded-lg border border-gray-300">
+                    <table class="w-full text-left table-auto text-xs font-mono whitespace-nowrap">
+                        <thead class="bg-gray-100">
                             <tr>
-                                <th>Target ID</th>
-                                <th>Mass<br><span class="lowercase text-[9px] font-normal">[M☉]</span></th>
-                                <th>Prot<br><span class="lowercase text-[9px] font-normal">[days]</span></th>
-                                <th>Flare Rate<br><span class="lowercase text-[9px] font-normal">[day⁻¹]</span></th>
-                                <th>Energy<br><span class="lowercase text-[9px] font-normal">[ergs]</span></th>
-                                <th>Energy Range Min</th>
-                                <th>Energy Range Max</th>
-                                <th>Total Obs Time<br><span class="lowercase text-[9px] font-normal">[day]</span></th>
-                                <th>Flux Error</th>
-                                <th>Flux Median<br><span class="lowercase text-[9px] font-normal">[W/m²]</span></th>
-                                <th>TESS Lum<br><span class="lowercase text-[9px] font-normal">[erg/s]</span></th>
-                                <th>Start Time<br><span class="lowercase text-[9px] font-normal">[JD]</span></th>
-                                <th>End Time<br><span class="lowercase text-[9px] font-normal">[JD]</span></th>
-                                <th>Flux Peak<br><span class="lowercase text-[9px] font-normal">[W/m²]</span></th>
-                                <th>Duration<br><span class="lowercase text-[9px] font-normal">[s]</span></th>
-                                <th>Sector</th>
-                                <th>Sector Obs<br><span class="lowercase text-[9px] font-normal">[day]</span></th>
-                                <th>Eq. Duration<br><span class="lowercase text-[9px] font-normal">[s]</span></th>
-                                <th>Flares Count</th>
-                                <th>Cadence<br><span class="lowercase text-[9px] font-normal">[s]</span></th>
-                                <th>Slope α</th>
-                                <th>Y-Int β</th>
-                                <th>Sat. Energy<br><span class="lowercase text-[9px] font-normal">[ergs]</span></th>
-                                <th class="text-center bg-red-500">Drop</th>
+                                <th class="bg-gray-700">target_id</th>
+                                <th class="bg-gray-700">temperature [K]</th>
+                                <th class="bg-gray-700">alpha</th>
+                                <th class="bg-gray-700">beta</th>
+                                <th class="bg-gray-700 text-center">Owner Controls</th>
                             </tr>
                         </thead>
-                        <tbody id="catalogDataTableBody" class="divide-y divide-gray-200 text-xs font-mono"></tbody>
-                    </table>
-                </div>
-
-                <div id="containerTableCondensed" class="overflow-x-auto rounded-lg border-2 border-black hidden">
-                    <table class="w-full text-left table-auto whitespace-nowrap">
-                        <thead>
+                        <tbody id="approvalQueueTableBody" class="divide-y divide-gray-200">
                             <tr>
-                                <th>Target ID</th>
-                                <th class="bg-blue-500">Mass [M☉]</th>
-                                <th class="bg-blue-500">Prot [days]</th>
-                                <th class="bg-purple-500">Energy Range [ergs]</th>
-                                <th class="bg-indigo-600">FFD Slope (α)</th>
-                                <th class="bg-indigo-600">Y-Intercept (β)</th>
-                                <th class="text-center bg-red-500">Drop</th>
+                                <td colspan="5" class="p-4 text-center text-gray-400 italic">No submissions awaiting authorization.</td>
                             </tr>
-                        </thead>
-                        <tbody id="condensedDataTableBody" class="divide-y divide-gray-200 text-xs font-mono"></tbody>
+                        </tbody>
                     </table>
                 </div>
-
             </div>
+
         </div>
     </main>
 
     <script>
-        // Track visual tab states
         let activeTab = 'full';
+        let isAdminUnlocked = false;
+        const OWNER_SECRET_KEY = "admin123";
 
-        // Master underlying data arrays 
+        // Converts value safely to a float if numeric, or returns as clean string
+        function cleanNumeric(val) {
+            if (val === undefined || val === null || val === '') return null;
+            const parsed = parseFloat(val);
+            return isNaN(parsed) ? val : parsed;
+        }
+
+        // Default master dataset with proper data-types
         let catalogMasterData = [
-            { target_id: "TIC 1403913", mass: "0.35", prot: "3.42", flare_rate: "0.45", energy: "2.1e32", energy_min: "1.0e31", energy_max: "5.0e33", total_obs: "24.2", flux_err: "0.0012", flux_med: "1.04e-12", tess_lum: "3.0e31", start_time: "2458350.5", end_time: "2458374.7", flux_peak: "4.5e-11", duration: "840", sector: "1", sec_obs: "24.2", eq_dur: "142.5", num_flares: "11", cadence: "120", alpha: "-0.85", beta: "12.4", sat_energy: "5.0e33" },
-            { target_id: "TIC 2773141", mass: "0.21", prot: "0.54", flare_rate: "1.20", energy: "6.8e33", energy_min: "5.0e32", energy_max: "2.0e35", total_obs: "50.8", flux_err: "0.0009", flux_med: "4.12e-11", tess_lum: "8.5e32", start_time: "2458400.1", end_time: "2458450.9", flux_peak: "9.1e-10", duration: "1650", sector: "2", sec_obs: "25.1", eq_dur: "890.0", num_flares: "61", cadence: "20",  alpha: "-0.72", beta: "15.1", sat_energy: "1.2e35" }
+            { target_id: "TIC 1403913", temperature: 3120, flare_rate: 0.45, energy: 2.1e32, energy_min: 1.0e31, energy_max: 5.0e33, total_obs: 24.2, flux_err: 0.0012, flux_med: 1.04e-12, tess_lum: 3.0e31, start_time: 2458350.5, end_time: 2458374.7, flux_peak: 4.5e-11, duration: 840, sector: 1, sector_obs: 24.2, eq_dur: 142.5, flares_count: 11, cadence: 120, alpha: -0.85, beta: 12.4, sat_energy: 5.0e33 },
+            { target_id: "TIC 2773141", temperature: 2950, flare_rate: 1.20, energy: 6.8e33, energy_min: 5.0e32, energy_max: 2.0e35, total_obs: 50.8, flux_err: 0.0009, flux_med: 4.12e-11, tess_lum: 8.5e32, start_time: 2458400.1, end_time: 2458450.9, flux_peak: 9.1e-10, duration: 1650, sector: 2, sector_obs: 25.1, eq_dur: 890.0, flares_count: 61, cadence: 20,  alpha: -0.72, beta: 15.1, sat_energy: 1.2e35 }
         ];
         
+        let pendingSubmissions = [];
         let catalogDisplayedData = [...catalogMasterData];
+
+        function toggleAdminAccess() {
+            if (isAdminUnlocked) {
+                isAdminUnlocked = false;
+                document.getElementById('ownerModerationGate').classList.add('hidden');
+                document.getElementById('adminGateBtn').innerText = "🔐 Owner Login";
+                document.getElementById('adminGateBtn').style.color = "var(--color-blue)";
+                return;
+            }
+
+            const check = prompt("Enter Website Owner Authentication Code:");
+            if (check === OWNER_SECRET_KEY) {
+                isAdminUnlocked = true;
+                document.getElementById('ownerModerationGate').classList.remove('hidden');
+                document.getElementById('adminGateBtn').innerText = "🔓 Logout Owner";
+                document.getElementById('adminGateBtn').style.color = "var(--color-green)";
+                drawQueue();
+            } else if (check !== null) {
+                alert("Invalid passphrase credentials.");
+            }
+        }
 
         function switchTab(targetTab) {
             activeTab = targetTab;
@@ -256,7 +329,7 @@
                 condensedBtn.className = "tab-btn tab-active px-4 py-2.5";
                 fullContainer.classList.add('hidden');
                 condensedContainer.classList.remove('hidden');
-                title.innerText = "Target Properties & Slopes Only";
+                title.innerText = "FFD Coefficients Registry";
             }
             drawTable();
         }
@@ -264,11 +337,9 @@
         function drawTable(dataset = catalogDisplayedData) {
             document.getElementById('rowCountBadge').innerText = `${dataset.length} rows`;
             
-            // Render Primary Full Matrix Block
             const fullBody = document.getElementById('catalogDataTableBody');
             fullBody.innerHTML = '';
             
-            // Render Condensed Core Matrix Block
             const condensedBody = document.getElementById('condensedDataTableBody');
             condensedBody.innerHTML = '';
 
@@ -280,42 +351,38 @@
             }
 
             dataset.forEach((entry, idx) => {
-                // Populate Full Tab Rows
                 const trFull = document.createElement('tr');
                 trFull.className = "hover:bg-orange-50/50 transition";
                 trFull.innerHTML = `
                     <td class="p-2 font-bold text-gray-900">${sanitize(entry.target_id)}</td>
-                    <td class="p-2 text-blue-600 font-semibold">${sanitize(entry.mass || '—')}</td>
-                    <td class="p-2 text-blue-600 font-semibold">${sanitize(entry.prot || '—')}</td>
-                    <td class="p-2">${sanitize(entry.flare_rate)}</td>
-                    <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[10px] badge-pink">${sanitize(entry.energy)}</span></td>
+                    <td class="p-2 text-blue-600 font-semibold">${sanitize(entry.temperature || '—')}</td>
+                    <td class="p-2">${sanitize(entry.flare_rate || '—')}</td>
+                    <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[10px] badge-pink">${sanitize(entry.energy || '—')}</span></td>
                     <td class="p-2 text-gray-500 text-[11px]">${sanitize(entry.energy_min || '—')}</td>
                     <td class="p-2 text-gray-500 text-[11px]">${sanitize(entry.energy_max || '—')}</td>
-                    <td class="p-2">${sanitize(entry.total_obs)}</td>
-                    <td class="p-2 text-gray-500">${sanitize(entry.flux_err)}</td>
-                    <td class="p-2">${sanitize(entry.flux_med)}</td>
-                    <td class="p-2">${sanitize(entry.tess_lum)}</td>
-                    <td class="p-2 text-gray-500">${sanitize(entry.start_time)}</td>
-                    <td class="p-2 text-gray-500">${sanitize(entry.end_time)}</td>
-                    <td class="p-2">${sanitize(entry.flux_peak)}</td>
-                    <td class="p-2">${sanitize(entry.duration)}</td>
-                    <td class="p-2">${sanitize(entry.sector)}</td>
-                    <td class="p-2">${sanitize(entry.sec_obs)}</td>
-                    <td class="p-2">${sanitize(entry.eq_dur)}</td>
-                    <td class="p-2 font-bold">${sanitize(entry.num_flares)}</td>
-                    <td class="p-2 text-gray-400">${sanitize(entry.cadence)}</td>
-                    <td class="p-2 text-blue-600 font-bold">${sanitize(entry.alpha)}</td>
-                    <td class="p-2 text-blue-600 font-bold">${sanitize(entry.beta)}</td>
-                    <td class="p-2 text-purple-700">${sanitize(entry.sat_energy)}</td>
+                    <td class="p-2">${sanitize(entry.total_obs || '—')}</td>
+                    <td class="p-2 text-gray-500">${sanitize(entry.flux_err || '—')}</td>
+                    <td class="p-2">${sanitize(entry.flux_med || '—')}</td>
+                    <td class="p-2">${sanitize(entry.tess_lum || '—')}</td>
+                    <td class="p-2 text-gray-500">${sanitize(entry.start_time || '—')}</td>
+                    <td class="p-2 text-gray-500">${sanitize(entry.end_time || '—')}</td>
+                    <td class="p-2">${sanitize(entry.flux_peak || '—')}</td>
+                    <td class="p-2">${sanitize(entry.duration || '—')}</td>
+                    <td class="p-2">${sanitize(entry.sector || '—')}</td>
+                    <td class="p-2">${sanitize(entry.sector_obs || '—')}</td>
+                    <td class="p-2">${sanitize(entry.eq_dur || '—')}</td>
+                    <td class="p-2 font-bold">${sanitize(entry.flares_count || '—')}</td>
+                    <td class="p-2 text-gray-400">${sanitize(entry.cadence || '—')}</td>
+                    <td class="p-2 text-blue-600 font-bold">${sanitize(entry.alpha || '—')}</td>
+                    <td class="p-2 text-blue-600 font-bold">${sanitize(entry.beta || '—')}</td>
+                    <td class="p-2 text-purple-700">${sanitize(entry.sat_energy || '—')}</td>
                     <td class="p-2 text-center"><button onclick="dropRow(${idx})" class="text-red-500 hover:text-red-700 transition font-bold px-1">✕</button></td>
                 `;
                 fullBody.appendChild(trFull);
 
-                // Populate Condensed Targeted Properties Tab Rows
                 const trCond = document.createElement('tr');
                 trCond.className = "hover:bg-orange-50/50 transition";
                 
-                // Formulate a clean range expression string metric view context
                 let rangeStr = '—';
                 if (entry.energy_min || entry.energy_max) {
                     rangeStr = `[${entry.energy_min || '?'} , ${entry.energy_max || '?'}]`;
@@ -323,18 +390,51 @@
 
                 trCond.innerHTML = `
                     <td class="p-3 font-bold text-gray-900">${sanitize(entry.target_id)}</td>
-                    <td class="p-3 font-semibold text-gray-800">${sanitize(entry.mass || '—')}</td>
-                    <td class="p-3 font-semibold text-gray-800">${sanitize(entry.prot || '—')}</td>
+                    <td class="p-3 font-semibold text-gray-800">${sanitize(entry.temperature || '—')}</td>
                     <td class="p-3"><span class="px-2 py-0.5 rounded bg-purple-50 border border-purple-300 text-purple-800 text-[11px] font-semibold">${sanitize(rangeStr)}</span></td>
-                    <td class="p-3 text-indigo-600 font-bold text-sm">${sanitize(entry.alpha)}</td>
-                    <td class="p-3 text-indigo-400 font-bold">${sanitize(entry.beta)}</td>
+                    <td class="p-3 text-indigo-600 font-bold text-sm">${sanitize(entry.alpha || '—')}</td>
+                    <td class="p-3 text-indigo-400 font-bold">${sanitize(entry.beta || '—')}</td>
                     <td class="p-3 text-center"><button onclick="dropRow(${idx})" class="text-red-500 hover:text-red-700 transition font-bold px-1">✕</button></td>
                 `;
                 condensedBody.appendChild(trCond);
             });
         }
 
-        // --- SQL Engine Functions ---
+        function drawQueue() {
+            document.getElementById('queueCountBadge').innerText = `${pendingSubmissions.length} pending`;
+            const qBody = document.getElementById('approvalQueueTableBody');
+            qBody.innerHTML = '';
+
+            if (pendingSubmissions.length === 0) {
+                qBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 italic">No submissions awaiting authorization.</td></tr>`;
+                return;
+            }
+
+            pendingSubmissions.forEach((item, qIdx) => {
+                const tr = document.createElement('tr');
+                tr.className = "bg-amber-50/40 hover:bg-amber-50 transition text-[11px]";
+                tr.innerHTML = `
+                    <td class="p-2 font-bold">${sanitize(item.target_id)}</td>
+                    <td class="p-2">${sanitize(item.temperature || '—')}</td>
+                    <td class="p-2 text-indigo-600 font-bold">${sanitize(item.alpha || '—')}</td>
+                    <td class="p-2 text-indigo-600 font-bold">${sanitize(item.beta || '—')}</td>
+                    <td class="p-2 text-center space-x-2">
+                        <button onclick="approveSubmission(${qIdx})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-0.5 rounded font-sans font-semibold transition shadow-sm">Approve</button>
+                        <button onclick="rejectSubmission(${qIdx})" class="bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded font-sans font-semibold transition shadow-sm">Reject</button>
+                    </td>
+                `;
+                qBody.appendChild(tr);
+            });
+        }
+
+        function approveSubmission(qIdx) {
+            const approvedItem = pendingSubmissions[qIdx];
+            catalogMasterData.push(approvedItem);
+            pendingSubmissions.splice(qIdx, 1);
+            drawQueue();
+            resetSQLView();
+        }
+
         function executeSQLQuery() {
             const queryStr = document.getElementById('sqlTerminalInput').value.trim();
             if(!queryStr) return alert("Write an SQL operation to run.");
@@ -349,7 +449,7 @@
                     alert("Query parsed successfully but did not produce an array pipeline.");
                 }
             } catch(err) {
-                alert("SQL Parsing Error:\n" + err.message);
+                alert("SQL Parsing Error:\n" + err.message + "\n\nVerify that columns are lowercase and formatted as listed in the helper table.");
             }
         }
 
@@ -380,31 +480,37 @@
                 skipEmptyLines: true,
                 complete: function(results) {
                     if(results.data && results.data.length > 0) {
-                        catalogMasterData = results.data.map(row => ({
-                            target_id:  row['Target ID'] || row['target_id'] || Object.values(row)[0] || '',
-                            mass:       row['Mass'] || row['mass'] || row['M_star'] || '',
-                            prot:       row['Prot'] || row['prot'] || row['P_rot'] || '',
-                            flare_rate: row['Flare Rate [day^-1]'] || row['Flare Rate'] || row['flare_rate'] || '',
-                            energy:     row['Energy [ergs]'] || row['Energy'] || row['energy'] || '',
-                            energy_min: row['Energy Range Min'] || row['energy_min'] || '',
-                            energy_max: row['Energy Range Max'] || row['energy_max'] || '',
-                            total_obs:  row['Total Obs Time [day]'] || row['total_obs'] || '',
-                            flux_err:   row['Flux Error'] || row['flux_error'] || '',
-                            flux_med:   row['Flux Median [W/m^2]'] || row['flux_median'] || '',
-                            tess_lum:   row['TESS Luminosity [erg/s]'] || row['tess_luminosity'] || '',
-                            start_time: row['Start Time [Julian day]'] || row['start_time'] || '',
-                            end_time:   row['End Time [Julian day]'] || row['end_time'] || '',
-                            flux_peak:  row['Flux Peak [W/m^2]'] || row['flux_peak'] || '',
-                            duration:   row['Duration [s]'] || row['duration'] || '',
-                            sector:     row['TESS Sector'] || row['sector'] || '',
-                            sec_obs:    row['Sector Obs Time [day]'] || row['sector_obs_time'] || '',
-                            eq_dur:     row['Equivalent Duration [s]'] || row['equivalent_duration'] || '',
-                            num_flares: row['Number of Flares'] || row['number_of_flares'] || '',
-                            cadence:    row['TESS Cadence [s]'] || row['tess_cadence'] || '',
-                            alpha:      row['FFD Slope \\alpha'] || row['alpha'] || row['slope'] || '',
-                            beta:       row['FFD Y-Int \\beta'] || row['beta'] || row['y_intercept'] || '',
-                            sat_energy: row['Energy of Saturation [ergs]'] || row['energy_of_saturation'] || ''
-                        }));
+                        catalogMasterData = results.data.map(row => {
+                            let id = row['TESS_ID'] || row['GAIA_ID'] || row['2MASS_ID'] || '';
+                            if (id && row['TESS_ID'] && !String(id).startsWith('TIC')) {
+                                id = 'TIC ' + id;
+                            }
+
+                            return {
+                                target_id:   id,
+                                temperature: cleanNumeric(row['Teff[K]'] || row['Temperature[K]'] || row['Teff'] || ''),
+                                flare_rate:  cleanNumeric(row['log10_Flare_Rate[day^-1]'] || ''),
+                                energy:      cleanNumeric(row['log10_Flare_Energy[erg]'] || ''),
+                                energy_min:  cleanNumeric(row['Energy Range Min'] || ''),
+                                energy_max:  cleanNumeric(row['Energy Range Max'] || ''),
+                                total_obs:   cleanNumeric(row['Total_Obs_Time[days]'] || ''),
+                                flux_err:    cleanNumeric(row['Flux_error[W/m^2]'] || ''),
+                                flux_med:    cleanNumeric(row['Flux_Median[W/m^2]'] || ''),
+                                tess_lum:    cleanNumeric(row['TESS_Luminosity[L☉]'] || ''),
+                                start_time:  cleanNumeric(row['Start_Time'] || ''),
+                                end_time:    cleanNumeric(row['End_Time'] || ''),
+                                flux_peak:   cleanNumeric(row['Flux Peak [W/m^2]'] || ''), 
+                                duration:    cleanNumeric(row['Duration [s]'] || ''),       
+                                sector:      cleanNumeric(row['TESS_Sector'] || ''),
+                                sector_obs:  cleanNumeric(row['Sector_Obs_Time[days]'] || ''),
+                                eq_dur:      cleanNumeric(row['Equivalent_Duration[s]'] || ''),
+                                flares_count:cleanNumeric(row['Number of Flares'] || ''),
+                                cadence:     cleanNumeric(row['TESS_Cadence'] || ''),
+                                alpha:       cleanNumeric(row['FFD_alpha'] || ''),
+                                beta:        cleanNumeric(row['FFD_beta'] || ''),
+                                sat_energy:  cleanNumeric(row['Energy of Saturation [ergs]'] || '')
+                            };
+                        });
                         resetSQLView();
                     }
                 },
@@ -414,39 +520,50 @@
 
         document.getElementById('metricsForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            catalogMasterData.push({
-                target_id: document.getElementById('m_target_id').value,
-                mass: document.getElementById('m_mass').value,
-                prot: document.getElementById('m_prot').value,
-                flare_rate: document.getElementById('m_flare_rate').value,
-                energy: document.getElementById('m_energy').value,
-                energy_min: document.getElementById('m_energy_min').value,
-                energy_max: document.getElementById('m_energy_max').value,
-                total_obs: document.getElementById('m_total_obs').value,
-                flux_err: document.getElementById('m_flux_err').value,
-                flux_med: document.getElementById('m_flux_med').value,
-                tess_lum: document.getElementById('m_tess_lum').value,
-                start_time: document.getElementById('m_start_time').value,
-                end_time: document.getElementById('m_end_time').value,
-                flux_peak: document.getElementById('m_flux_peak').value,
-                duration: document.getElementById('m_duration').value,
-                sector: document.getElementById('m_sector').value,
-                sec_obs: document.getElementById('m_sec_obs').value,
-                eq_dur: document.getElementById('m_eq_dur').value,
-                num_flares: document.getElementById('m_num_flares').value,
-                cadence: document.getElementById('m_cadence').value,
-                alpha: document.getElementById('m_alpha').value,
-                beta: document.getElementById('m_beta').value,
-                sat_energy: document.getElementById('m_sat_energy').value
+            
+            pendingSubmissions.push({
+                target_id: document.getElementById('m_target_id')?.value || '',
+                temperature: cleanNumeric(document.getElementById('m_temperature')?.value || ''),
+                flare_rate: cleanNumeric(document.getElementById('m_flare_rate')?.value || ''),
+                energy: cleanNumeric(document.getElementById('m_energy')?.value || ''),
+                energy_min: cleanNumeric(document.getElementById('m_energy_min')?.value || ''),
+                energy_max: cleanNumeric(document.getElementById('m_energy_max')?.value || ''),
+                total_obs: cleanNumeric(document.getElementById('m_total_obs')?.value || ''),
+                flux_err: cleanNumeric(document.getElementById('m_flux_err')?.value || ''),
+                flux_med: cleanNumeric(document.getElementById('m_flux_med')?.value || ''),
+                tess_lum: cleanNumeric(document.getElementById('m_tess_lum')?.value || ''),
+                start_time: cleanNumeric(document.getElementById('m_start_time')?.value || ''),
+                end_time: cleanNumeric(document.getElementById('m_end_time')?.value || ''),
+                flux_peak: cleanNumeric(document.getElementById('m_flux_peak')?.value || ''),
+                duration: cleanNumeric(document.getElementById('m_duration')?.value || ''),
+                sector: cleanNumeric(document.getElementById('m_sector')?.value || ''),
+                sector_obs: cleanNumeric(document.getElementById('m_sector_obs')?.value || ''),
+                eq_dur: cleanNumeric(document.getElementById('m_eq_dur')?.value || ''),
+                flares_count: cleanNumeric(document.getElementById('m_flares_count')?.value || ''),
+                cadence: cleanNumeric(document.getElementById('m_cadence')?.value || ''),
+                alpha: cleanNumeric(document.getElementById('m_alpha')?.value || ''),
+                beta: cleanNumeric(document.getElementById('m_beta')?.value || ''),
+                sat_energy: cleanNumeric(document.getElementById('m_sat_energy')?.value || '')
             });
-            resetSQLView();
+
+            if(isAdminUnlocked) {
+                drawQueue();
+            }
             this.reset();
+            alert("Record forwarded to the Website Owner Approval Queue successfully.");
         });
 
-        function dropRow(idx) {
-            const id = catalogDisplayedData[idx].target_id;
-            catalogMasterData = catalogMasterData.filter(item => item.target_id !== id);
-            catalogDisplayedData.splice(idx, 1);
+        function rejectSubmission(qIdx) {
+            if(confirm("Are you sure you want to dismiss this coefficients proposal?")) {
+                pendingSubmissions.splice(qIdx, 1);
+                drawQueue();
+            }
+        }
+
+        function dropRow(displayedIdx) {
+            const targetObj = catalogDisplayedData[displayedIdx];
+            catalogMasterData = catalogMasterData.filter(item => item !== targetObj);
+            catalogDisplayedData.splice(displayedIdx, 1);
             drawTable();
         }
 
